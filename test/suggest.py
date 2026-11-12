@@ -1,0 +1,32 @@
+import asyncio, pathlib
+from playwright.async_api import async_playwright
+root = pathlib.Path(__file__).resolve().parent
+async def main():
+    async with async_playwright() as p:
+        b = await p.chromium.launch(executable_path="/usr/bin/google-chrome", args=["--allow-file-access-from-files"])
+        pg = await b.new_page(viewport={"width": 1440, "height": 900})
+        errs=[]; pg.on("pageerror", lambda e: errs.append(str(e)))
+        await pg.goto((root / ".out/index.html").as_uri())
+        await pg.evaluate("window.ready")
+        await pg.evaluate("([s,l]) => present(s,l)", [(root/"sample.md").read_text(), 8])
+        await pg.wait_for_timeout(200)
+        await pg.mouse.move(700, 400); await pg.click(".onstage-edit-btn"); await pg.wait_for_timeout(200)
+        await pg.keyboard.type("\n- voir [[art")
+        await pg.wait_for_timeout(150)
+        print("link popup:", await pg.locator(".onstage-suggest").is_visible(), await pg.locator(".onstage-suggest-item").all_inner_texts())
+        await pg.screenshot(path=str(root/".out/suggest.png"))
+        await pg.keyboard.press("Enter")
+        val = await pg.input_value(".onstage-source-editor")
+        print("inserted link:", val.splitlines()[-1], "| editor open:", await pg.locator(".onstage-source-editor").count()==1)
+        await pg.keyboard.type(" #ma")
+        await pg.wait_for_timeout(100)
+        print("tag popup:", await pg.locator(".onstage-suggest-item").all_inner_texts())
+        await pg.keyboard.press("Escape")
+        print("escape closes list only:", not await pg.locator(".onstage-suggest").is_visible(), "| editor open:", await pg.locator(".onstage-source-editor").count()==1)
+        await pg.keyboard.press("Tab")  # no list: inserts tab (no crash)
+        await pg.keyboard.type("hs")
+        await pg.keyboard.press("Escape"); await pg.wait_for_timeout(400)
+        src = await pg.evaluate("window.SRC")
+        print("saved:", "- voir [[Article SIAM]] #ma" in src, "| editor closed:", await pg.locator(".onstage-source-editor").count()==0, "errors:", errs)
+        await b.close()
+asyncio.run(main())

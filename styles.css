@@ -1,0 +1,1026 @@
+/* OnStage - projection styles. Everything is scoped under .onstage-root. */
+
+/* ------------------------------------------------------------------ */
+/* Host view                                                           */
+/* ------------------------------------------------------------------ */
+
+.workspace-leaf-content[data-type="onstage-projection"] > .view-header {
+	display: none;
+}
+
+.workspace-leaf-content[data-type="onstage-projection"] > .view-content.onstage-view {
+	padding: 0;
+	overflow: hidden;
+	position: relative;
+	height: 100%;
+}
+
+.onstage-status {
+	cursor: pointer;
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+}
+
+.onstage-status.is-hidden {
+	display: none;
+}
+
+.onstage-status.is-paused {
+	color: var(--text-warning);
+}
+
+.onstage-status-icon {
+	display: inline-flex;
+}
+
+.onstage-status-icon svg {
+	width: 14px;
+	height: 14px;
+}
+
+/* ------------------------------------------------------------------ */
+/* Palette                                                             */
+/* ------------------------------------------------------------------ */
+
+.onstage-root {
+	--onstage-accent: #3a5bd9;
+	--onstage-base: 1;
+	--onstage-font: "Inter", "SF Pro Display", -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI",
+		system-ui, "Helvetica Neue", Arial, sans-serif;
+	--onstage-mono: "JetBrains Mono", "SF Mono", ui-monospace, Menlo, Consolas, "Liberation Mono", monospace;
+
+	--onstage-bg: #fbfaf8;
+	--onstage-fg: #16171a;
+	--onstage-muted: #5d6067;
+	--onstage-faint: #e4e1db;
+	--onstage-code-bg: #f1efea;
+	--onstage-letterbox: #ecebe7;
+	color-scheme: light;
+}
+
+.onstage-root[data-theme="dark"] {
+	--onstage-bg: #131417;
+	--onstage-fg: #f1f1ef;
+	--onstage-muted: #a3a6ad;
+	--onstage-faint: #2b2d33;
+	--onstage-code-bg: #1d1f24;
+	--onstage-letterbox: #0b0b0d;
+	color-scheme: dark;
+}
+
+/* Re-map Obsidian variables so rendered Markdown follows the slide theme, not the app theme. */
+.onstage-root {
+	--background-primary: var(--onstage-bg);
+	--background-primary-alt: var(--onstage-code-bg);
+	--background-secondary: var(--onstage-code-bg);
+	--background-modifier-border: var(--onstage-faint);
+	--text-normal: var(--onstage-fg);
+	--text-muted: var(--onstage-muted);
+	--text-faint: var(--onstage-muted);
+	--text-accent: var(--onstage-accent);
+	--text-accent-hover: var(--onstage-accent);
+	--interactive-accent: var(--onstage-accent);
+	--interactive-normal: color-mix(in srgb, var(--onstage-fg) 8%, var(--onstage-bg));
+	--interactive-hover: color-mix(in srgb, var(--onstage-fg) 14%, var(--onstage-bg));
+	--link-color: var(--onstage-accent);
+	--link-color-hover: var(--onstage-accent);
+	--link-unresolved-color: var(--onstage-accent);
+	--link-unresolved-opacity: 1;
+	--link-external-color: var(--onstage-accent);
+	--link-decoration: none;
+	--link-external-decoration: none;
+	--code-background: var(--onstage-code-bg);
+	--code-normal: var(--onstage-fg);
+	--code-size: 0.72em;
+	--font-monospace: var(--onstage-mono);
+	--blockquote-border-color: var(--onstage-accent);
+	--blockquote-border-thickness: 6px;
+	--hr-color: var(--onstage-faint);
+	--table-border-color: var(--onstage-faint);
+	--table-header-background: transparent;
+	--table-header-background-hover: transparent;
+	--table-row-background-hover: transparent;
+	--checkbox-color: var(--onstage-accent);
+	--checkbox-color-hover: var(--onstage-accent);
+	--checkbox-border-color: var(--onstage-muted);
+	--checkbox-border-color-hover: var(--onstage-muted);
+	--checkbox-size: 0.78em;
+	--checkbox-radius: 0.18em;
+	--checkbox-marker-color: var(--onstage-bg);
+	--checklist-done-color: var(--onstage-muted);
+	--checklist-done-decoration: none;
+	--list-marker-color: var(--onstage-accent);
+	--list-marker-color-collapsed: var(--onstage-accent);
+	--tag-color: var(--onstage-accent);
+	--tag-background: color-mix(in srgb, var(--onstage-accent) 12%, transparent);
+	--tag-border-width: 0;
+	--text-highlight-bg: color-mix(in srgb, var(--onstage-accent) 20%, transparent);
+	--font-text: var(--onstage-font);
+	--font-text-theme: var(--onstage-font);
+	--font-interface: var(--onstage-font);
+	--embed-border-left: 4px solid var(--onstage-faint);
+	--embed-padding: 0 0 0 0.8em;
+
+	/* Syntax highlighting, readable on both palettes. */
+	--code-comment: #8a8f98;
+	--code-function: #b5651d;
+	--code-keyword: #9c3fb8;
+	--code-important: #c2410c;
+	--code-operator: #b42318;
+	--code-property: #2563c9;
+	--code-punctuation: var(--onstage-muted);
+	--code-string: #2f7d4a;
+	--code-tag: #b42318;
+	--code-value: #8a5a00;
+}
+
+.onstage-root[data-theme="dark"] {
+	--code-comment: #7f848e;
+	--code-function: #e5b567;
+	--code-keyword: #d08bec;
+	--code-important: #fb923c;
+	--code-operator: #f47e7e;
+	--code-property: #7cb1ff;
+	--code-punctuation: var(--onstage-muted);
+	--code-string: #8fd19e;
+	--code-tag: #f47e7e;
+	--code-value: #f2c66d;
+}
+
+/* ------------------------------------------------------------------ */
+/* Stage                                                               */
+/* ------------------------------------------------------------------ */
+
+.onstage-root {
+	position: absolute;
+	inset: 0;
+	overflow: hidden;
+	background: var(--onstage-letterbox);
+	cursor: default;
+	user-select: none;
+	outline: none;
+}
+
+.onstage-canvas {
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	width: 1920px;
+	height: var(--onstage-canvas-h, 1080px);
+	transform-origin: center center;
+	transform: translate(-50%, -50%) scale(0.5);
+	background: var(--onstage-bg);
+	overflow: hidden;
+}
+
+/* Rendered content is display-only (checkboxes, embeds); links are handled by OnStage. */
+.onstage-flow input,
+.onstage-flow iframe,
+.onstage-flow video {
+	pointer-events: none;
+}
+
+.onstage-links .onstage-flow a,
+.onstage-links .onstage-title a {
+	cursor: pointer;
+}
+
+.onstage-links .onstage-flow a:hover,
+.onstage-links .onstage-title a:hover {
+	text-decoration: underline;
+	text-decoration-thickness: 0.06em;
+	text-underline-offset: 0.15em;
+}
+
+.onstage-slide {
+	--onstage-scale: 1;
+	--onstage-fs: calc(50px * var(--onstage-base) * var(--onstage-scale));
+	position: absolute;
+	inset: 0;
+	box-sizing: border-box;
+	padding: 84px 112px 116px;
+	background: var(--onstage-bg);
+	color: var(--onstage-fg);
+	font-family: var(--onstage-font);
+	font-feature-settings: "ss01", "cv11";
+	-webkit-font-smoothing: antialiased;
+	text-rendering: optimizeLegibility;
+	overflow: hidden;
+}
+
+.onstage-measure {
+	visibility: hidden;
+	z-index: -1;
+	pointer-events: none;
+}
+
+.onstage-inner {
+	display: flex;
+	flex-direction: column;
+	height: 100%;
+	min-height: 0;
+}
+
+.onstage-enter .onstage-inner {
+	animation: onstage-in 260ms cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+@keyframes onstage-in {
+	from {
+		opacity: 0;
+		transform: translateY(10px);
+	}
+	to {
+		opacity: 1;
+		transform: none;
+	}
+}
+
+.onstage-blackout {
+	position: absolute;
+	inset: 0;
+	background: #000;
+	opacity: 0;
+	transition: opacity 240ms ease;
+	z-index: 10;
+	pointer-events: none;
+}
+
+.onstage-blackout.is-active {
+	opacity: 1;
+}
+
+/* ------------------------------------------------------------------ */
+/* Titles                                                              */
+/* ------------------------------------------------------------------ */
+
+.onstage-rule {
+	width: 64px;
+	height: 6px;
+	border-radius: 3px;
+	background: var(--onstage-accent);
+	margin-bottom: 30px;
+	flex: none;
+}
+
+.onstage-head {
+	flex: none;
+	margin-bottom: 52px;
+}
+
+.onstage-title {
+	margin: 0;
+	color: var(--onstage-fg);
+	font-family: var(--onstage-font);
+	font-weight: 700;
+	letter-spacing: -0.025em;
+	line-height: 1.08;
+	font-variant-ligatures: common-ligatures;
+}
+
+h2.onstage-title {
+	font-size: calc(78px * var(--onstage-base) * (0.55 + 0.45 * var(--onstage-scale)));
+}
+
+.onstage-title .onstage-fragment,
+.onstage-title .onstage-fragment > p {
+	display: inline;
+	margin: 0;
+}
+
+.onstage-continued {
+	display: inline-block;
+	margin-left: 0.7em;
+	padding: 0.28em 0.7em;
+	border-radius: 999px;
+	background: color-mix(in srgb, var(--onstage-accent) 12%, transparent);
+	color: var(--onstage-accent);
+	font-size: 0.32em;
+	font-weight: 600;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+	vertical-align: middle;
+}
+
+/* Topic with no notes yet: just the title, larger, centered vertically. */
+.onstage-kind-content.is-title-only .onstage-inner {
+	justify-content: center;
+}
+
+.onstage-kind-content.is-title-only .onstage-head {
+	margin-bottom: 0;
+}
+
+.onstage-kind-content.is-title-only h2.onstage-title {
+	font-size: calc(96px * var(--onstage-base));
+}
+
+.onstage-kind-content.is-title-only .onstage-body {
+	display: none;
+}
+
+/* Cover */
+.onstage-kind-cover .onstage-inner {
+	justify-content: center;
+}
+
+.onstage-kind-cover h1.onstage-title {
+	font-size: calc(124px * var(--onstage-base));
+	letter-spacing: -0.035em;
+	line-height: 1.02;
+	max-width: 1500px;
+}
+
+.onstage-meta {
+	margin-top: 44px;
+	color: var(--onstage-muted);
+	font-size: calc(36px * var(--onstage-base));
+	line-height: 1.45;
+	font-weight: 450;
+}
+
+.onstage-kind-cover .onstage-body {
+	flex: 0 1 auto;
+	margin-top: 40px;
+	color: var(--onstage-muted);
+}
+
+.onstage-kind-cover.is-title-only .onstage-body {
+	display: none;
+}
+
+/* Section divider (heading above the split level) */
+.onstage-kind-section .onstage-inner {
+	justify-content: center;
+}
+
+.onstage-kind-section .onstage-head {
+	margin-bottom: 40px;
+}
+
+.onstage-kind-section h1.onstage-title {
+	font-size: calc(108px * var(--onstage-base));
+	letter-spacing: -0.03em;
+}
+
+.onstage-kind-section h1.onstage-title::before {
+	content: "";
+	display: block;
+	width: 64px;
+	height: 6px;
+	border-radius: 3px;
+	background: var(--onstage-accent);
+	margin-bottom: 36px;
+}
+
+.onstage-kind-section .onstage-body {
+	flex: 0 1 auto;
+	color: var(--onstage-muted);
+}
+
+.onstage-kind-section.is-title-only .onstage-body {
+	display: none;
+}
+
+/* ------------------------------------------------------------------ */
+/* Body                                                                */
+/* ------------------------------------------------------------------ */
+
+.onstage-body {
+	flex: 1 1 auto;
+	min-height: 0;
+	min-width: 0;
+	overflow: hidden;
+}
+
+.onstage-flow {
+	font-size: var(--onstage-fs);
+	line-height: 1.42;
+	font-weight: 420;
+	letter-spacing: -0.005em;
+	overflow-wrap: anywhere;
+}
+
+.onstage-block + .onstage-block {
+	margin-top: 0.62em;
+}
+
+.onstage-block.is-list-continuation {
+	margin-top: 0.3em;
+}
+
+.onstage-fragment > :first-child {
+	margin-top: 0;
+}
+
+.onstage-fragment > :last-child {
+	margin-bottom: 0;
+}
+
+.onstage-flow p {
+	margin: 0 0 0.55em;
+}
+
+.onstage-flow strong,
+.onstage-flow b {
+	font-weight: 680;
+}
+
+.onstage-flow em {
+	font-style: italic;
+}
+
+.onstage-flow a,
+.onstage-flow .internal-link,
+.onstage-flow .external-link {
+	color: var(--onstage-accent);
+	text-decoration: none;
+	background-image: none;
+	padding-right: 0;
+}
+
+.onstage-flow mark {
+	background: color-mix(in srgb, var(--onstage-accent) 20%, transparent);
+	color: inherit;
+	padding: 0 0.12em;
+	border-radius: 0.15em;
+}
+
+.onstage-flow del,
+.onstage-flow s {
+	color: var(--onstage-muted);
+}
+
+/* Headings inside a slide */
+.onstage-flow h1,
+.onstage-flow h2,
+.onstage-flow h3,
+.onstage-flow h4,
+.onstage-flow h5,
+.onstage-flow h6 {
+	margin: 0.2em 0 0.25em;
+	color: var(--onstage-fg);
+	font-family: var(--onstage-font);
+	line-height: 1.2;
+	letter-spacing: -0.015em;
+}
+
+.onstage-flow h1,
+.onstage-flow h2 {
+	font-size: 1.3em;
+	font-weight: 700;
+}
+
+.onstage-flow h3 {
+	font-size: 1.12em;
+	font-weight: 680;
+}
+
+.onstage-flow h4 {
+	font-size: 1em;
+	font-weight: 650;
+}
+
+.onstage-flow h5,
+.onstage-flow h6 {
+	font-size: 0.72em;
+	font-weight: 650;
+	text-transform: uppercase;
+	letter-spacing: 0.08em;
+	color: var(--onstage-muted);
+}
+
+.onstage-block-heading + .onstage-block {
+	margin-top: 0.3em;
+}
+
+.onstage-block + .onstage-block-heading {
+	margin-top: 0.9em;
+}
+
+/* Lists */
+.onstage-flow ul,
+.onstage-flow ol {
+	margin: 0;
+	padding-left: 1.15em;
+}
+
+.onstage-flow ul ul,
+.onstage-flow ol ol,
+.onstage-flow ul ol,
+.onstage-flow ol ul {
+	margin-top: 0.22em;
+	font-size: 0.86em;
+	color: var(--onstage-muted);
+}
+
+.onstage-flow li {
+	margin: 0 0 0.22em;
+	padding-left: 0.2em;
+}
+
+.onstage-flow li:last-child {
+	margin-bottom: 0;
+}
+
+.onstage-flow li::marker {
+	color: var(--onstage-accent);
+}
+
+.onstage-flow ul > li::marker {
+	font-size: 0.95em;
+}
+
+.onstage-flow ol > li::marker {
+	font-weight: 650;
+	font-variant-numeric: tabular-nums;
+}
+
+.onstage-flow ul ul > li::marker {
+	color: var(--onstage-muted);
+}
+
+/* Tasks */
+.onstage-flow li.task-list-item {
+	list-style: none;
+}
+
+.onstage-flow ul > li.task-list-item {
+	margin-left: -1.15em;
+	padding-left: 0;
+}
+
+.onstage-flow ul ul > li.task-list-item {
+	margin-left: -1em;
+}
+
+.onstage-flow input.task-list-item-checkbox {
+	-webkit-appearance: none;
+	appearance: none;
+	font-size: inherit;
+	position: relative;
+	display: inline-block;
+	box-sizing: border-box;
+	width: 0.74em;
+	height: 0.74em;
+	margin: 0 0.5em 0 0;
+	padding: 0;
+	vertical-align: -0.04em;
+	border: 0.085em solid var(--onstage-muted);
+	border-radius: 0.17em;
+	background: transparent;
+	pointer-events: none;
+	flex: none;
+}
+
+.onstage-flow input.task-list-item-checkbox:checked {
+	background: var(--onstage-accent);
+	border-color: var(--onstage-accent);
+}
+
+.onstage-flow input.task-list-item-checkbox::after {
+	content: none;
+	-webkit-mask-image: none;
+	mask-image: none;
+}
+
+.onstage-flow input.task-list-item-checkbox:checked::after {
+	content: "";
+	position: absolute;
+	left: 30%;
+	top: 10%;
+	width: 26%;
+	height: 52%;
+	background: none;
+	border: solid var(--onstage-bg);
+	border-width: 0 0.08em 0.08em 0;
+	transform: rotate(45deg);
+}
+
+.onstage-flow li.task-list-item.is-checked {
+	color: var(--onstage-muted);
+}
+
+/* Quotes and callouts */
+.onstage-flow blockquote {
+	margin: 0;
+	padding: 0.05em 0 0.05em 0.85em;
+	border-left: 6px solid var(--onstage-accent);
+	color: var(--onstage-muted);
+	font-style: normal;
+}
+
+.onstage-flow .callout {
+	border-radius: 18px;
+	padding: 0.65em 0.9em;
+	font-size: 0.88em;
+	margin: 0;
+	mix-blend-mode: normal;
+}
+
+.onstage-flow .callout-title {
+	gap: 0.4em;
+	font-weight: 650;
+}
+
+.onstage-flow .callout-icon svg {
+	width: 0.9em;
+	height: 0.9em;
+}
+
+.onstage-flow .callout-content {
+	color: var(--onstage-fg);
+}
+
+/* Code */
+.onstage-flow code {
+	font-family: var(--onstage-mono);
+	font-size: 0.82em;
+	background: var(--onstage-code-bg);
+	color: var(--onstage-fg);
+	padding: 0.08em 0.32em;
+	border-radius: 0.28em;
+}
+
+.onstage-flow pre {
+	margin: 0;
+	padding: 0.85em 1.05em;
+	background: var(--onstage-code-bg);
+	border-radius: 18px;
+	font-size: 0.66em;
+	line-height: 1.5;
+	white-space: pre-wrap;
+	overflow: hidden;
+}
+
+.onstage-flow pre code {
+	background: transparent;
+	padding: 0;
+	font-size: 1em;
+	white-space: pre-wrap;
+}
+
+/* Tables */
+.onstage-flow table {
+	border-collapse: collapse;
+	font-size: 0.8em;
+	margin: 0;
+	width: auto;
+	max-width: 100%;
+}
+
+.onstage-flow th,
+.onstage-flow td {
+	border: none;
+	border-bottom: 1px solid var(--onstage-faint);
+	padding: 0.42em 1.3em 0.42em 0;
+	text-align: left;
+	vertical-align: top;
+	background: transparent;
+}
+
+.onstage-flow th {
+	font-weight: 650;
+	border-bottom: 2px solid var(--onstage-fg);
+}
+
+.onstage-flow tr:last-child td {
+	border-bottom: none;
+}
+
+/* Images and embeds */
+.onstage-flow img,
+.onstage-flow svg.mermaid,
+.onstage-flow .mermaid svg {
+	display: block;
+	max-width: 100%;
+	max-height: calc(640px * var(--onstage-scale));
+	height: auto;
+	width: auto;
+	object-fit: contain;
+	border-radius: 14px;
+	margin: 0.15em 0;
+}
+
+.onstage-flow .image-embed {
+	display: block;
+}
+
+.onstage-flow p:has(> .image-embed:only-child),
+.onstage-flow p:has(> img:only-child) {
+	margin: 0;
+}
+
+.onstage-flow video {
+	max-width: 100%;
+	max-height: calc(640px * var(--onstage-scale));
+	border-radius: 14px;
+}
+
+.onstage-flow .markdown-embed {
+	border: none;
+	border-left: 4px solid var(--onstage-faint);
+	padding: 0 0 0 0.8em;
+	margin: 0;
+}
+
+.onstage-flow .markdown-embed-title,
+.onstage-flow .markdown-embed-link,
+.onstage-flow .file-embed-title {
+	display: none;
+}
+
+/* Math */
+.onstage-flow mjx-container {
+	color: var(--onstage-fg);
+}
+
+.onstage-flow mjx-container[display="true"] {
+	margin: 0.3em 0 !important;
+}
+
+.onstage-block-math .math-block,
+.onstage-flow .math-block {
+	font-size: 1.05em;
+}
+
+/* Tags */
+.onstage-flow .tag {
+	background: color-mix(in srgb, var(--onstage-accent) 12%, transparent);
+	color: var(--onstage-accent);
+	border: none;
+	padding: 0.04em 0.45em;
+	border-radius: 999px;
+	font-size: 0.78em;
+	font-weight: 550;
+}
+
+.onstage-flow hr {
+	display: none;
+}
+
+/* Editor chrome that makes no sense on a projected slide */
+.onstage-root .heading-collapse-indicator,
+.onstage-root .collapse-indicator,
+.onstage-root .list-collapse-indicator,
+.onstage-root .copy-code-button,
+.onstage-root .edit-block-button,
+.onstage-root .markdown-embed-link,
+.onstage-root .footnote-backref {
+	display: none !important;
+}
+
+/* Table of contents slide (untitled, centered) */
+.onstage-kind-agenda.is-untitled .onstage-inner {
+	justify-content: center;
+}
+
+.onstage-kind-agenda.is-untitled .onstage-body {
+	flex: 0 1 auto;
+}
+
+.onstage-kind-agenda .onstage-flow {
+	font-size: calc(var(--onstage-fs) * 1.05);
+}
+
+.onstage-kind-agenda .onstage-block.is-list-continuation {
+	margin-top: 0.5em;
+}
+
+.onstage-kind-agenda ol {
+	padding-left: 1.6em;
+}
+
+.onstage-kind-agenda ol > li::marker {
+	color: var(--onstage-accent);
+	font-weight: 700;
+}
+
+/* ------------------------------------------------------------------ */
+/* Footer: counter and progress                                        */
+/* ------------------------------------------------------------------ */
+
+.onstage-footer {
+	position: absolute;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	height: 0;
+}
+
+.onstage-counter {
+	position: absolute;
+	right: 112px;
+	bottom: 44px;
+	color: var(--onstage-muted);
+	font-size: 22px;
+	font-weight: 550;
+	letter-spacing: 0.1em;
+	font-variant-numeric: tabular-nums;
+}
+
+.onstage-progress {
+	position: absolute;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	height: 5px;
+	background: var(--onstage-faint);
+}
+
+.onstage-progress-fill {
+	height: 100%;
+	background: var(--onstage-accent);
+	transition: width 300ms ease;
+}
+
+.onstage-no-progress .onstage-footer {
+	display: none;
+}
+
+/* ------------------------------------------------------------------ */
+/* Markdown editing on the slide (Cmd/Ctrl+E)                          */
+/* ------------------------------------------------------------------ */
+
+.onstage-source {
+	position: absolute;
+	inset: 64px 110px 56px;
+	display: flex;
+	flex-direction: column;
+	animation: onstage-in 200ms cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+.onstage-source-editor {
+	flex: 1 1 auto;
+	min-height: 0;
+	box-sizing: border-box;
+	width: 100%;
+	margin: 0;
+	padding: 40px 48px;
+	border: none;
+	border-radius: 20px;
+	outline: none;
+	box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--onstage-accent) 35%, transparent);
+	background: var(--onstage-code-bg);
+	color: var(--onstage-fg);
+	font-family: var(--onstage-mono);
+	font-size: calc(30px * var(--onstage-base));
+	line-height: 1.6;
+	tab-size: 4;
+	white-space: pre-wrap;
+	overflow-wrap: anywhere;
+	overflow: auto;
+	resize: none;
+	user-select: text;
+	caret-color: var(--onstage-accent);
+}
+
+.onstage-source-editor::selection {
+	background: color-mix(in srgb, var(--onstage-accent) 30%, transparent);
+}
+
+.onstage-source-hint {
+	flex: none;
+	margin-top: 16px;
+	color: var(--onstage-muted);
+	font-size: 20px;
+	letter-spacing: 0.04em;
+	text-align: right;
+}
+
+.onstage-source-hint.is-error {
+	color: #c2410c;
+}
+
+.onstage-root button.onstage-edit-btn {
+	position: absolute;
+	top: 12px;
+	right: 12px;
+	z-index: 20;
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	padding: 6px 12px;
+	border: none;
+	border-radius: 999px;
+	height: auto;
+	background: color-mix(in srgb, var(--onstage-fg) 8%, var(--onstage-bg));
+	box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
+	color: var(--onstage-fg);
+	font-family: var(--onstage-font);
+	font-size: 13px;
+	font-weight: 550;
+	cursor: pointer;
+	opacity: 0;
+	transition: opacity 160ms ease;
+}
+
+.onstage-root:hover button.onstage-edit-btn,
+.onstage-root button.onstage-edit-btn.is-active {
+	opacity: 0.92;
+}
+
+/* Obsidian styles every button with its own theme colors: keep the slide's colors instead. */
+.onstage-root button.onstage-edit-btn:hover,
+.onstage-root button.onstage-edit-btn:focus,
+.onstage-root button.onstage-edit-btn:active {
+	background: color-mix(in srgb, var(--onstage-fg) 14%, var(--onstage-bg));
+	color: var(--onstage-fg);
+	box-shadow: 0 1px 4px rgba(0, 0, 0, 0.16);
+}
+
+.onstage-root button.onstage-edit-btn.is-active,
+.onstage-root button.onstage-edit-btn.is-active:hover {
+	background: var(--onstage-accent);
+	color: #fff;
+}
+
+.onstage-root button.onstage-edit-btn.is-hidden {
+	display: none;
+}
+
+.onstage-edit-icon {
+	display: inline-flex;
+}
+
+.onstage-edit-icon svg {
+	width: 14px;
+	height: 14px;
+}
+
+.onstage-zoom-flash {
+	position: absolute;
+	left: 50%;
+	top: 50%;
+	z-index: 30;
+	transform: translate(-50%, -50%);
+	padding: 10px 18px;
+	border-radius: 12px;
+	background: rgba(0, 0, 0, 0.72);
+	color: #fff;
+	font-family: var(--onstage-font);
+	font-size: 18px;
+	font-weight: 600;
+	font-variant-numeric: tabular-nums;
+	opacity: 0;
+	pointer-events: none;
+	transition: opacity 180ms ease;
+}
+
+.onstage-zoom-flash.is-visible {
+	opacity: 1;
+}
+
+/* Autocompletion in the Markdown editor ([[links]] and #tags) */
+.onstage-suggest {
+	position: absolute;
+	z-index: 40;
+	min-width: 260px;
+	max-width: 480px;
+	padding: 4px;
+	border-radius: 10px;
+	background: var(--background-primary, #fff);
+	box-shadow: 0 6px 24px rgba(0, 0, 0, 0.22), 0 0 0 1px rgba(0, 0, 0, 0.06);
+	font-family: var(--font-interface, var(--onstage-font));
+	font-size: 14px;
+	color: var(--text-normal);
+}
+
+.onstage-suggest-item {
+	display: flex;
+	align-items: baseline;
+	gap: 8px;
+	padding: 6px 10px;
+	border-radius: 6px;
+	cursor: pointer;
+	white-space: nowrap;
+	overflow: hidden;
+}
+
+.onstage-suggest-item.is-selected {
+	background: color-mix(in srgb, var(--onstage-accent) 16%, transparent);
+}
+
+.onstage-suggest-label {
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.onstage-suggest-detail {
+	margin-left: auto;
+	color: var(--text-muted);
+	font-size: 12px;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.onstage-suggest-mirror {
+	position: absolute;
+	top: 0;
+	left: 0;
+	visibility: hidden;
+	white-space: pre-wrap;
+	overflow-wrap: anywhere;
+	pointer-events: none;
+}
