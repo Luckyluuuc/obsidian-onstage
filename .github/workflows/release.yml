@@ -1,7 +1,11 @@
 name: Release
 
+# Publishes a GitHub release whenever main contains a manifest version
+# that has not been released yet (or when a version tag is pushed).
 on:
   push:
+    branches:
+      - main
     tags:
       - "*"
 
@@ -9,7 +13,7 @@ permissions:
   contents: write
 
 jobs:
-  build:
+  release:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -20,9 +24,15 @@ jobs:
       - run: npm run lint
       - run: npm test
       - run: npm run build
-      - name: Create release
+      - name: Create the release if this version is new
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          tag="${GITHUB_REF#refs/tags/}"
-          gh release create "$tag" --title="$tag" main.js manifest.json styles.css
+          version=$(node -p "require('./manifest.json').version")
+          if gh release view "$version" >/dev/null 2>&1; then
+            echo "Release $version already exists, nothing to do."
+          else
+            gh release create "$version" main.js manifest.json styles.css \
+              --target "$GITHUB_SHA" --title "$version" \
+              --notes "OnStage $version"
+          fi

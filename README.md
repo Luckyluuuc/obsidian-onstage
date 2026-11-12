@@ -114,6 +114,8 @@ npm run lint     # Obsidian review rules
 
 Copy `main.js`, `manifest.json` and `styles.css` into `<vault>/.obsidian/plugins/onstage/` to test.
 
+To release: `npm version patch` (updates `manifest.json` and `versions.json`), then push `main`. The workflow publishes the GitHub release for any new version.
+
 ---
 
 ## En français
