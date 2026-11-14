@@ -34,6 +34,9 @@ interface Session {
 	cursorLine: number;
 	lastEditLine: number;
 	firstPendingEdit: number;
+	/** The projection follows the note (toggled from the status bar; starts from the setting). */
+	follow: boolean;
+	/** Temporary pause after a manual change of slide while following. */
 	paused: boolean;
 	pausedSlide: number;
 	timer: number | null;
@@ -176,8 +179,7 @@ export default class OnStagePlugin extends Plugin {
 
 		this.statusEl = this.addStatusBarItem();
 		this.statusEl.addClass("onstage-status");
-		this.statusEl.setAttr("aria-label", t("statusTooltip"));
-		this.registerDomEvent(this.statusEl, "click", () => this.togglePause());
+		this.registerDomEvent(this.statusEl, "click", (evt) => this.onStatusClick(evt));
 		this.updateStatus();
 	}
 
@@ -255,6 +257,7 @@ export default class OnStagePlugin extends Plugin {
 			cursorLine,
 			lastEditLine: -1,
 			firstPendingEdit: 0,
+			follow: old ? old.follow : this.settings.follow,
 			paused: false,
 			pausedSlide: -1,
 			timer: null,
@@ -467,7 +470,7 @@ export default class OnStagePlugin extends Plugin {
 			view.applyAppearance();
 		}
 		const deck = parseDeck(s.latestText, this.parseOptions(s));
-		const following = this.settings.follow && !s.paused;
+		const following = s.follow && !s.paused;
 		view.update({
 			deck,
 			sourcePath: s.file.path,
@@ -532,7 +535,7 @@ export default class OnStagePlugin extends Plugin {
 			return false;
 		}
 		// Stay on the edited slide: pause following before touching the note.
-		if (this.settings.follow) {
+		if (s.follow) {
 			s.paused = true;
 			s.pausedSlide = view.slideIndexForLine(s.cursorLine);
 		}
@@ -709,7 +712,7 @@ export default class OnStagePlugin extends Plugin {
 
 	private followCursor(s: Session, line: number): void {
 		const view = s.view;
-		if (!this.settings.follow || view.isEditing) return;
+		if (!s.follow || view.isEditing) return;
 		const idx = view.slideIndexForLine(line);
 		if (s.paused) {
 			if (idx === s.pausedSlide) return;
@@ -732,7 +735,7 @@ export default class OnStagePlugin extends Plugin {
 		}
 		this.currentView = view;
 		const s = this.sessions.get(view);
-		if (s && this.settings.follow) {
+		if (s && s.follow) {
 			s.paused = true;
 			s.pausedSlide = view.slideIndexForLine(s.cursorLine);
 		}
@@ -746,36 +749,35 @@ export default class OnStagePlugin extends Plugin {
 		return true;
 	}
 
-	/** Status bar click: pause or resume following (never turns the setting off). */
-	private togglePause(): void {
+	/**
+	 * Follow on / off for the current presentation (status bar click, command).
+	 * Off is sticky: the projection only moves when you change slides yourself.
+	 * A temporary pause (after a manual change of slide) is simply resumed.
+	 */
+	private toggleFollow(): void {
 		const s = this.currentSession();
-		if (!s) return;
-		if (!this.settings.follow) {
-			this.toggleFollow();
+		if (!s) {
+			this.settings.follow = !this.settings.follow;
+			void this.saveData(this.settings);
 			return;
 		}
-		if (s.paused) {
+		if (s.follow && s.paused) {
 			s.paused = false;
-			s.view.goToLine(s.cursorLine);
 		} else {
-			s.paused = true;
-			s.pausedSlide = s.view.slideIndexForLine(s.cursorLine);
+			s.follow = !s.follow;
+			s.paused = false;
 		}
+		if (s.follow) s.view.goToLine(s.cursorLine);
 		this.updateStatus();
 	}
 
-	private toggleFollow(): void {
+	private onStatusClick(evt: MouseEvent): void {
 		const s = this.currentSession();
-		if (s?.paused && this.settings.follow) {
-			s.paused = false;
-			s.view.goToLine(s.cursorLine);
-			this.updateStatus();
-			return;
-		}
-		this.settings.follow = !this.settings.follow;
-		void this.saveData(this.settings);
-		if (this.settings.follow && s) s.view.goToLine(s.cursorLine);
-		this.updateStatus();
+		if (!s) return;
+		const act = (evt.target as HTMLElement | null)?.closest("[data-act]")?.getAttribute("data-act");
+		if (act === "prev") this.manualNavigate(s.view, () => s.view.prev());
+		else if (act === "next") this.manualNavigate(s.view, () => s.view.next());
+		else this.toggleFollow();
 	}
 
 	private updateStatus(): void {
@@ -785,15 +787,17 @@ export default class OnStagePlugin extends Plugin {
 		el.toggleClass("is-hidden", !s);
 		if (!s) return;
 		el.empty();
-		el.setAttr(
-			"aria-label",
-			!this.settings.follow ? t("statusTipOff") : s.paused ? t("statusTipPaused") : t("statusTipFollow")
-		);
-		setIcon(el.createSpan({ cls: "onstage-status-icon" }), "presentation");
+		const prev = el.createSpan({ cls: "onstage-status-nav", attr: { "data-act": "prev", "aria-label": t("cmdPrev") } });
+		setIcon(prev, "chevron-left");
+		const main = el.createSpan({ cls: "onstage-status-main" });
+		main.setAttr("aria-label", !s.follow ? t("statusTipOff") : s.paused ? t("statusTipPaused") : t("statusTipFollow"));
+		setIcon(main.createSpan({ cls: "onstage-status-icon" }), "presentation");
 		const { current, total } = s.slide;
-		let state = this.settings.follow ? (s.paused ? t("statusPaused") : t("statusFollow")) : t("statusOff");
+		let state = !s.follow ? t("statusOff") : s.paused ? t("statusPaused") : t("statusFollow");
 		if (this.settings.mode === "manual" && s.latestText !== s.displayedText) state += ` - ${t("statusPending")}`;
-		el.createSpan({ text: `${current + 1}/${total}  ${state}` });
-		el.toggleClass("is-paused", s.paused || !this.settings.follow);
+		main.createSpan({ text: `${current + 1} / ${total}  ${state}` });
+		const next = el.createSpan({ cls: "onstage-status-nav", attr: { "data-act": "next", "aria-label": t("cmdNext") } });
+		setIcon(next, "chevron-right");
+		el.toggleClass("is-paused", s.paused || !s.follow);
 	}
 }

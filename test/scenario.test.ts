@@ -12,7 +12,7 @@ p.saveData = async () => {};
 let status = "";
 p.updateStatus = function () {
 	const s = this.currentSession();
-	status = s ? `${this.settings.follow ? (s.paused ? "PAUSED" : "FOLLOW") : "FREE"}` : "-";
+	status = s ? `${s.follow ? (s.paused ? "PAUSED" : "FOLLOW") : "OFF"}` : "-";
 };
 const FILE = { basename: "Note", path: "n.md" };
 let text = "# A\n- a1\n\n# B\n- b1\n\n# C\n- c1\n";
@@ -45,10 +45,14 @@ const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
 	p.manualNavigate(view, () => view.next()); log("click next again");
 	type(1, text.replace("- a1", "- a1 z")); await wait(80); log("types in A");
 	assert.equal(names()[shown], "A");
-	p.togglePause(); log("clicks status bar");
-	assert.ok(sess.paused && p.settings.follow, "status click pauses, never turns the setting off");
-	p.togglePause(); log("clicks status bar again");
-	assert.ok(!sess.paused);
+	p.toggleFollow(); log("clicks status bar: not following");
+	assert.ok(!sess.follow && p.settings.follow, "status click stops following this presentation only");
+	move(4); type(4, text.replace("- b1", "- b1 w")); await wait(80); log("moves to B and types: must stay on A");
+	assert.equal(names()[shown], "A", "not following: typing elsewhere must not move the projection");
+	p.manualNavigate(view, () => view.next()); log("arrow from the status bar");
+	assert.equal(names()[shown], "B");
+	p.toggleFollow(); log("clicks status bar again: follows");
+	assert.ok(sess.follow && !sess.paused);
 
 	// Calm mode: a character typed after moving to another line must not appear at once.
 	pushes = 0;

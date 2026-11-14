@@ -24,6 +24,8 @@ export interface Slide {
 	title: string | null;
 	/** Source line of the title heading, or -1. */
 	titleLine: number;
+	/** Level of the title heading (1 for #), or 0 when the slide has no heading. */
+	level: number;
 	/** First and last source line covered by this slide (-1 for generated slides). */
 	start: number;
 	end: number;
@@ -36,7 +38,7 @@ export interface Deck {
 }
 
 export interface ParseOptions {
-	/** 0 = split on thematic breaks only; 1..3 = heading level that starts a slide. */
+	/** 0 = split on thematic breaks only; 1..6 = every heading up to this level starts a slide. */
 	splitLevel: number;
 	cover: boolean;
 	agenda: boolean;
@@ -163,12 +165,11 @@ export function parseDeck(source: string, opts: ParseOptions): Deck {
 		kind: opts.cover ? "cover" : "content",
 		title: opts.cover ? opts.fallbackTitle : null,
 		titleLine: -1,
+		level: 0,
 		start: 0,
 		end: 0,
 		blocks: [],
 	};
-	let coverTitled = false;
-	let seenSplitHeading = false;
 	let builder = new BlockBuilder();
 
 	const finish = (endLine: number) => {
@@ -178,9 +179,9 @@ export function parseDeck(source: string, opts: ParseOptions): Deck {
 		slides.push(slide);
 		builder = new BlockBuilder();
 	};
-	const open = (kind: SlideKind, title: string | null, n: number) => {
+	const open = (kind: SlideKind, title: string | null, n: number, hl = 0) => {
 		finish(n - 1);
-		slide = { kind, title, titleLine: title === null ? -1 : n, start: n, end: n, blocks: [] };
+		slide = { kind, title, titleLine: title === null ? -1 : n, level: hl, start: n, end: n, blocks: [] };
 	};
 
 	let fence: string | null = null;
@@ -229,20 +230,9 @@ export function parseDeck(source: string, opts: ParseOptions): Deck {
 		if (h) {
 			const hl = h[1].length;
 			const text = h[2];
-			if (level > 0 && hl === level) {
-				seenSplitHeading = true;
-				open("content", text, n);
-				continue;
-			}
-			if (level > 0 && hl < level) {
-				if (slide.kind === "cover" && !coverTitled && !seenSplitHeading && hl === 1) {
-					slide.title = text;
-					slide.titleLine = n;
-					coverTitled = true;
-					builder.close();
-					continue;
-				}
-				open("section", text, n);
+			// Every heading up to the chosen level starts a slide; deeper ones stay inside it.
+			if (level > 0 && hl <= level) {
+				open("content", text, n, hl);
 				continue;
 			}
 			builder.start("heading", line, n);
@@ -291,12 +281,17 @@ export function parseDeck(source: string, opts: ParseOptions): Deck {
 	let result = slides.filter((s) => s.kind === "cover" || s.title !== null || s.blocks.length > 0);
 
 	if (opts.agenda) {
-		const topics = result.filter((s) => s.kind === "content" && s.title);
+		// The table of contents lists the highest-level headings of the note. A level with a single
+		// heading (often the note title written as #) is skipped for the next one.
+		const titled = result.filter((s) => s.kind === "content" && s.title && s.level > 0);
+		let topics: Slide[] = [];
+		for (let lv = 1; lv <= 6 && topics.length < 2; lv++) topics = titled.filter((s) => s.level === lv);
 		if (topics.length >= 2) {
 			const agenda: Slide = {
 				kind: "agenda",
 				title: opts.agendaTitle || null,
 				titleLine: -1,
+				level: 0,
 				start: -1,
 				end: -1,
 				blocks: topics.map((s, i) => ({

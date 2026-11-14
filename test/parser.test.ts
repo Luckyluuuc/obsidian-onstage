@@ -35,11 +35,13 @@ Après break
 2. deux
 `;
 const d = parseDeck(src, opts);
-console.log(JSON.stringify(d.slides.map(s => ({ k: s.kind, t: s.title, r: [s.start, s.end], b: s.blocks.map(b => [b.kind, b.text]) })), null, 1));
+// The cover always takes the note title; every heading up to H2 is a slide.
 assert.equal(d.slides[0].kind, "cover");
-assert.equal(d.slides[0].title, "Réunion de suivi");
+assert.equal(d.slides[0].title, "File");
 assert.equal(d.slides[1].kind, "agenda");
-assert.equal(d.slides[2].title, "Résultats");
+assert.deepEqual(d.slides.filter((s) => s.kind === "content" && s.title).map((s) => s.title), ["Réunion de suivi", "Résultats", "Planning"]);
+// Table of contents: a single # is skipped, so it lists the ## headings.
+assert.deepEqual(d.slides[1].blocks.map((b) => b.text), ["1. Résultats", "2. Planning"]);
 assert.ok(d.slides.every((s) => (s.kind as string) !== "actions"));
 const shown = JSON.stringify(d.slides.map((s) => [s.title, s.blocks.map((b) => b.text)]));
 assert.ok(!shown.includes("secret"));
@@ -47,14 +49,23 @@ assert.ok(shown.includes("hidden")); // callouts are ordinary content now
 // Blocks keep their original source so they can be edited from the slide.
 const withComment = d.slides.flatMap((s) => s.blocks).find((b) => b.raw.includes("secret"));
 assert.ok(withComment && withComment.raw !== withComment.text);
-assert.equal(d.slides[2].titleLine, 7);
-assert.equal(slideForLine(d, 9), 2);
+const res = d.slides.findIndex((s) => s.title === "Résultats");
+assert.equal(d.slides[res].titleLine, 7);
+assert.equal(slideForLine(d, 9), res);
 
 // Default since v2: the note title is the cover, each H1 is a slide.
 const d1 = parseDeck("---\ndate: 2026-11-12\n---\nIntro\n# Résultats\n- a\n## Détail\n- b\n# Planning\n", { ...opts, splitLevel: 1, fallbackTitle: "Réunion" });
 assert.deepEqual(d1.slides.map((s) => [s.kind, s.title]), [["cover", "Réunion"], ["agenda", "Agenda"], ["content", "Résultats"], ["content", "Planning"]]);
 assert.equal(d1.slides[0].blocks[0].text, "Intro");
 assert.equal(d1.slides[2].blocks[1].kind, "heading");
+// Up to H2: # and ## both make slides; the table of contents lists only the highest level present.
+const mixed = parseDeck("# Partie 1\n## A\n- a\n## B\n# Partie 2\n## C\n", { ...opts, splitLevel: 2 });
+assert.deepEqual(mixed.slides.filter((s) => s.kind === "content").map((s) => s.title), ["Partie 1", "A", "B", "Partie 2", "C"]);
+assert.deepEqual(mixed.slides.find((s) => s.kind === "agenda")!.blocks.map((b) => b.text), ["1. Partie 1", "2. Partie 2"]);
+const only2 = parseDeck("Intro\n## A\n## B\n### détail\n", { ...opts, splitLevel: 2 });
+assert.deepEqual(only2.slides.find((s) => s.kind === "agenda")!.blocks.map((b) => b.text), ["1. A", "2. B"]);
+assert.equal(only2.slides.find((s) => s.title === "B")!.blocks[0].kind, "heading");
+
 // The Markdown of a slide is its source lines, comments included.
 import { slideSource, slideKeys } from "../src/parser";
 const o1 = { ...opts, splitLevel: 1, fallbackTitle: "N" };

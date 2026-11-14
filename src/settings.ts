@@ -30,7 +30,7 @@ export interface OnStageSettings {
 
 export const DEFAULT_SETTINGS: OnStageSettings = {
 	settingsVersion: 4,
-	splitLevel: 1,
+	splitLevel: 2,
 	cover: true,
 	agenda: true,
 	mode: "calm",
@@ -74,9 +74,9 @@ export class OnStageSettingTab extends PluginSettingTab {
 			.setDesc(t("sSplitLevelDesc"))
 			.addDropdown((d) =>
 				d
-					.addOption("1", "H1")
-					.addOption("2", "H2")
-					.addOption("3", "H3")
+					.addOption("1", "H1 (#)")
+					.addOption("2", "H2 (# ##)")
+					.addOption("3", "H3 (# ## ###)")
 					.addOption("0", t("sSplitOnlyBreaks"))
 					.setValue(String(s.splitLevel))
 					.onChange(async (v) => {

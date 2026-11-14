@@ -11,6 +11,8 @@ on:
 
 permissions:
   contents: write
+  id-token: write
+  attestations: write
 
 jobs:
   release:
@@ -24,6 +26,13 @@ jobs:
       - run: npm run lint
       - run: npm test
       - run: npm run build
+      - name: Attest the build provenance of the release files
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-path: |
+            main.js
+            styles.css
+            manifest.json
       - name: Create the release if this version is new
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

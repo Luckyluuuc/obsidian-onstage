@@ -797,12 +797,12 @@ export class ProjectionView extends ItemView {
 
 		if (kind !== "cover") {
 			const footer = container.createDiv({ cls: "onstage-footer" });
-			const total = this.models.filter((x) => x.slide.kind !== "cover").length;
-			const offset = this.models.length && this.models[0].slide.kind === "cover" ? 0 : 1;
-			const n = idx + offset;
+			// Same numbering as the status bar in the note window: position among all slides.
+			const total = this.models.length;
+			const n = idx + 1;
 			footer.createDiv({
 				cls: "onstage-counter",
-				text: `${String(n).padStart(2, "0")} / ${String(total).padStart(2, "0")}`,
+				text: `${n} / ${total}`,
 			});
 			const bar = footer.createDiv({ cls: "onstage-progress" });
 			bar.createDiv({ cls: "onstage-progress-fill" }).style.width = `${total ? (n / total) * 100 : 0}%`;
