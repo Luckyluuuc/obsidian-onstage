@@ -66,6 +66,17 @@ const only2 = parseDeck("Intro\n## A\n## B\n### détail\n", { ...opts, splitLeve
 assert.deepEqual(only2.slides.find((s) => s.kind === "agenda")!.blocks.map((b) => b.text), ["1. A", "2. B"]);
 assert.equal(only2.slides.find((s) => s.title === "B")!.blocks[0].kind, "heading");
 
+// Images: image-only paragraphs, consecutive ones merged into one row; note embeds are not images.
+import { isImageOnly } from "../src/parser";
+assert.ok(isImageOnly("![[a.png]]"));
+assert.ok(isImageOnly("![[a.png|400]] ![](https://x.org/b.jpg)"));
+assert.ok(!isImageOnly("![[Une autre note]]"));
+assert.ok(!isImageOnly("Voir ![[a.png]]"));
+const imgs = parseDeck("## A\n![[a.png]]\n\n![[b.png]]\n\nTexte\n\n![[c.png]]\n![[Note]]\n", { ...opts, splitLevel: 2 });
+const a = imgs.slides.find((s) => s.title === "A")!;
+assert.deepEqual(a.blocks.map((b) => b.kind), ["image", "paragraph", "paragraph"]);
+assert.equal(a.blocks[0].text, "![[a.png]]\n\n![[b.png]]");
+
 // The Markdown of a slide is its source lines, comments included.
 import { slideSource, slideKeys } from "../src/parser";
 const o1 = { ...opts, splitLevel: 1, fallbackTitle: "N" };

@@ -763,6 +763,8 @@ export class ProjectionView extends ItemView {
 		container.className = container.hasClass("onstage-measure") ? "onstage-slide onstage-measure" : "onstage-slide";
 		container.addClass(`onstage-kind-${kind}`);
 		if (blockIdx.length === 0) container.addClass("is-title-only");
+		// A slide that only holds images (one image or one row) shows them as large as possible.
+		if (blockIdx.length === 1 && m.slide.blocks[blockIdx[0]].kind === "image") container.addClass("is-image-only");
 		if (!m.title) container.addClass("is-untitled");
 
 		const inner = container.createDiv({ cls: "onstage-inner" });
@@ -795,6 +797,8 @@ export class ProjectionView extends ItemView {
 			prevKind = b.kind;
 		}
 
+		this.applyImageWidths(flow);
+
 		if (kind !== "cover") {
 			const footer = container.createDiv({ cls: "onstage-footer" });
 			// Same numbering as the status bar in the note window: position among all slides.
@@ -808,6 +812,18 @@ export class ProjectionView extends ItemView {
 			bar.createDiv({ cls: "onstage-progress-fill" }).style.width = `${total ? (n / total) * 100 : 0}%`;
 		}
 		return body;
+	}
+
+	/**
+	 * Obsidian's ![[image.png|400]] gives a width in pixels of the note. A note is about 700px
+	 * wide, so the width is kept as the same share of the slide width.
+	 */
+	private applyImageWidths(root: HTMLElement): void {
+		root.querySelectorAll("img[width]").forEach((img) => {
+			const w = parseFloat(img.getAttribute("width") ?? "");
+			if (!Number.isFinite(w) || w <= 0) return;
+			(img as HTMLElement).setCssProps({ "--onstage-img-w": `${Math.min(100, (w / 700) * 100)}%` });
+		});
 	}
 
 	private fits(container: HTMLElement, body: HTMLElement, scale: number, slack: number): boolean {

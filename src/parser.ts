@@ -5,7 +5,7 @@
  * projection can follow the editor cursor.
  */
 
-export type BlockKind = "list-item" | "heading" | "fence" | "math" | "quote" | "paragraph";
+export type BlockKind = "list-item" | "heading" | "fence" | "math" | "quote" | "paragraph" | "image";
 
 export interface Block {
 	text: string;
@@ -107,6 +107,21 @@ export function frontmatterText(source: string): string | null {
 	return extractFrontmatter(source.replace(/\r\n?/g, "\n").split("\n")).frontmatter;
 }
 
+/** An embedded image: ![[file.png]], ![[file.png|400]] or ![alt](url). */
+const IMAGE_RE = /!\[\[[^\]|#]+\.(?:png|jpe?g|gif|svg|webp|bmp|avif|tiff?)(?:#[^\]|]*)?(?:\|[^\]]*)?\]\]|!\[[^\]]*\]\([^)\s]+(?:\s+"[^"]*")?\)/gi;
+
+/** True when a paragraph contains nothing but images. */
+export function isImageOnly(text: string): boolean {
+	const lines = text.split("\n").filter((l) => l.trim() !== "");
+	return (
+		lines.length > 0 &&
+		lines.every((l) => {
+			IMAGE_RE.lastIndex = 0;
+			return IMAGE_RE.test(l) && l.replace(IMAGE_RE, "").trim() === "";
+		})
+	);
+}
+
 class BlockBuilder {
 	blocks: Block[] = [];
 	private cur: { lines: string[]; start: number; kind: BlockKind } | null = null;
@@ -145,7 +160,7 @@ class BlockBuilder {
 				raw: "",
 				start: this.cur.start,
 				end: this.cur.start + this.cur.lines.length - 1,
-				kind: this.cur.kind,
+				kind: this.cur.kind === "paragraph" && isImageOnly(this.cur.lines.join("\n")) ? "image" : this.cur.kind,
 			});
 		}
 		this.cur = null;
@@ -274,6 +289,19 @@ export function parseDeck(source: string, opts: ParseOptions): Deck {
 	finish(lines.length - 1);
 
 	for (const sl of slides) {
+		// Images that follow each other (only blank lines between) form one row.
+		const merged: Block[] = [];
+		for (const b of sl.blocks) {
+			const prev = merged[merged.length - 1];
+			const onlyBlanks = prev && lines.slice(prev.end + 1, b.start).every((l) => l.trim() === "");
+			if (prev && prev.kind === "image" && b.kind === "image" && onlyBlanks) {
+				prev.text = `${prev.text}\n\n${b.text}`;
+				prev.end = b.end;
+			} else {
+				merged.push(b);
+			}
+		}
+		sl.blocks = merged;
 		for (const b of sl.blocks) b.raw = rawLines.slice(b.start, b.end + 1).join("\n");
 	}
 

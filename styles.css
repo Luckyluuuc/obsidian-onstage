@@ -727,6 +727,12 @@ h2.onstage-title {
 	margin: 0.15em 0;
 }
 
+/* ![[image.png|400]]: the width chosen in the note, as a share of the slide width. */
+.onstage-flow img[width] {
+	width: var(--onstage-img-w, auto);
+	height: auto;
+}
+
 .onstage-flow .image-embed {
 	display: block;
 }
@@ -734,6 +740,42 @@ h2.onstage-title {
 .onstage-flow p:has(> .image-embed:only-child),
 .onstage-flow p:has(> img:only-child) {
 	margin: 0;
+}
+
+/* Images that follow each other in the note: one row, centered. */
+.onstage-block-image .onstage-fragment {
+	display: flex;
+	flex-wrap: nowrap;
+	align-items: center;
+	justify-content: center;
+	gap: 0.6em;
+}
+
+.onstage-block-image .onstage-fragment > p,
+.onstage-block-image .image-embed,
+.onstage-block-image .internal-embed {
+	display: contents;
+}
+
+.onstage-block-image br {
+	display: none;
+}
+
+.onstage-block-image img {
+	flex: 0 1 auto;
+	min-width: 0;
+	margin: 0;
+}
+
+/* A slide with nothing but images: they take all the room left under the title. */
+.onstage-slide.is-image-only .onstage-flow,
+.onstage-slide.is-image-only .onstage-block,
+.onstage-slide.is-image-only .onstage-fragment {
+	height: 100%;
+}
+
+.onstage-slide.is-image-only .onstage-block-image img {
+	max-height: 100%;
 }
 
 .onstage-flow video {

@@ -64,6 +64,8 @@ export class ItemView extends Component {
 export class WorkspaceLeaf {}
 
 function obsidianize(html: string): string {
+	// Like Obsidian: ![alt|300](url) sets the image width.
+	html = html.replace(/<img src="([^"]*)" alt="([^"|]*)\|(\d+)">/g, '<img src="$1" alt="$2" width="$3">');
 	// Mimic Obsidian task list markup.
 	return html.replace(/<li>\[( |x)\] ?/g, (_m, c) =>
 		`<li class="task-list-item${c === "x" ? " is-checked" : ""}" data-task="${c}"><input type="checkbox" class="task-list-item-checkbox"${c === "x" ? " checked" : ""}>`)
