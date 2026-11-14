@@ -72,9 +72,32 @@ function obsidianize(html: string): string {
 		.replace(/<ul>(\s*<li class="task-list-item)/g, '<ul class="contains-task-list">$1');
 }
 
+/** Wrap like Obsidian's reading view: image embeds in spans, each top-level element in a div. */
+function obsidianWrap(html: string): string {
+	html = html.replace(/<img ([^>]*)>/g, (_m, attrs) => {
+		const src = /src="([^"]*)"/.exec(attrs)?.[1] ?? "";
+		const width = /width="([^"]*)"/.exec(attrs)?.[1];
+		// Width on the embed span only, as some Obsidian versions do.
+		const imgAttrs = (window as any).OBSIDIAN_WIDTH_ON_SPAN ? attrs.replace(/\s*width="[^"]*"/, "") : attrs;
+		return `<span class="internal-embed media-embed image-embed is-loaded" src="${src}"${width ? ` width="${width}"` : ""}><img ${imgAttrs}></span>`;
+	});
+	const tmp = document.createElement("div");
+	tmp.innerHTML = html;
+	return [...tmp.children].map((c) => `<div class="el-${c.tagName.toLowerCase()}">${c.outerHTML}</div>`).join("");
+}
+
 export const MarkdownRenderer = {
 	async render(_app: unknown, src: string, el: HTMLElement): Promise<void> {
-		el.innerHTML = obsidianize(md.render(src));
+		const html = obsidianize(md.render(src));
+		el.innerHTML = (window as any).OBSIDIAN_DOM ? obsidianWrap(html) : html;
+		if ((window as any).OBSIDIAN_LATE_WIDTH) {
+			// Like an embed that loads later: the width only arrives after rendering.
+			el.querySelectorAll("img[width]").forEach((img) => {
+				const w = img.getAttribute("width") as string;
+				img.removeAttribute("width");
+				setTimeout(() => img.setAttribute("width", w), 300);
+			});
+		}
 	},
 };
 

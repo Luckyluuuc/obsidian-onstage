@@ -721,16 +721,11 @@ h2.onstage-title {
 	max-width: 100%;
 	max-height: calc(640px * var(--onstage-scale));
 	height: auto;
-	width: auto;
+	/* ![[image.png|400]]: the width chosen in the note, as a share of the slide width. */
+	width: var(--onstage-img-w, auto);
 	object-fit: contain;
 	border-radius: 14px;
 	margin: 0.15em 0;
-}
-
-/* ![[image.png|400]]: the width chosen in the note, as a share of the slide width. */
-.onstage-flow img[width] {
-	width: var(--onstage-img-w, auto);
-	height: auto;
 }
 
 .onstage-flow .image-embed {
@@ -751,9 +746,8 @@ h2.onstage-title {
 	gap: 0.6em;
 }
 
-.onstage-block-image .onstage-fragment > p,
-.onstage-block-image .image-embed,
-.onstage-block-image .internal-embed {
+/* Whatever wraps the images (paragraphs, embed spans, section divs), lay the images out directly. */
+.onstage-block-image .onstage-fragment *:not(img) {
 	display: contents;
 }
 
@@ -789,6 +783,14 @@ h2.onstage-title {
 	border-left: 4px solid var(--onstage-faint);
 	padding: 0 0 0 0.8em;
 	margin: 0;
+}
+
+/* An embedded note scrolls inside its own area (wheel or trackpad) instead of being cut off. */
+.onstage-flow .markdown-embed-content {
+	max-height: calc(560px * var(--onstage-scale));
+	overflow-y: auto;
+	overscroll-behavior: contain;
+	scrollbar-width: thin;
 }
 
 .onstage-flow .markdown-embed-title,

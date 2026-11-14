@@ -21,6 +21,7 @@ Any note works: course notes, a talk, a project review, a meeting agenda. Write 
 - **Links.** Web links open in your browser; links to notes open in a tab of the main window, never on the projection. Clicking a link never changes slide.
 - **Fills the screen.** The slide takes the shape of the window or screen (4:3 to 21:9), with no empty bands in fullscreen. Zoom with + and -. Can be turned off.
 - **Images without extra syntax.** An image alone on a slide fills it; images that follow each other in the note form a row; `![[image.png|400]]` keeps the width you chose in the note.
+- **Embedded notes scroll.** A `![[note]]` embed scrolls inside the slide (wheel or trackpad) and keeps its position while you edit.
 - **Everything Obsidian renders.** Images, embeds, LaTeX math, callouts, code with syntax highlighting, tables, Mermaid.
 - **Presentation remotes.** Page Up / Page Down change slides even while the cursor is in the editor.
 - **Light and dark themes**, accent color and font settings. High contrast for projectors.

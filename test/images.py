@@ -20,10 +20,12 @@ async def main():
         b = await p.chromium.launch(executable_path="/usr/bin/google-chrome", args=["--allow-file-access-from-files"])
         pg = await b.new_page(viewport={"width": 1440, "height": 900})
         errs=[]; pg.on("pageerror", lambda e: errs.append(str(e)))
+        await pg.add_init_script("window.OBSIDIAN_DOM = true; window.OBSIDIAN_WIDTH_ON_SPAN = true")
         await pg.goto((root / ".out/index.html").as_uri())
         await pg.evaluate("window.ready")
         await pg.evaluate("([s]) => present(s, 1)", [NOTE])
         for i in range(3):
+            await pg.wait_for_timeout(400)
             await pg.wait_for_timeout(500)
             await pg.screenshot(path=str(root / f".out/img-{i}.png"))
             boxes = await pg.evaluate("[...document.querySelectorAll('.onstage-slide:not(.onstage-measure) .onstage-flow img')].map(i => { const r = i.getBoundingClientRect(); return [Math.round(r.x), Math.round(r.y), Math.round(r.width), Math.round(r.height)]; })")

@@ -53,8 +53,13 @@ export default class OnStagePlugin extends Plugin {
 	private currentView: ProjectionView | null = null;
 	private statusEl: HTMLElement | null = null;
 
+	/** Development install (Hot Reload marker present): write diagnostics about the shown slide. */
+	devMode = false;
+
 	async onload(): Promise<void> {
 		await this.loadSettings();
+		const dir = this.manifest.dir;
+		this.devMode = !!dir && (await this.app.vault.adapter.exists(`${dir}/.hotreload`));
 
 		this.registerView(VIEW_TYPE_ONSTAGE, (leaf) => new ProjectionView(leaf, this));
 
@@ -382,6 +387,13 @@ export default class OnStagePlugin extends Plugin {
 		this.sessions.delete(view);
 		if (this.currentView === view) this.currentView = null;
 		this.updateStatus();
+	}
+
+	/** Development installs only: save the HTML of the shown slide, to debug rendering. */
+	writeDiagnostics(slide: number, html: string): void {
+		const dir = this.manifest.dir;
+		if (!this.devMode || !dir) return;
+		void this.app.vault.adapter.write(`${dir}/debug-slide-${slide}.html`, html).catch(() => undefined);
 	}
 
 	onSlideShown(view: ProjectionView, current: number, total: number): void {

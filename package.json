@@ -1,6 +1,6 @@
 {
 	"name": "onstage",
-	"version": "0.1.2",
+	"version": "0.1.3",
 	"description": "Obsidian plugin: live slide projection of a note you keep editing.",
 	"main": "main.js",
 	"scripts": {

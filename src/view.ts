@@ -114,6 +114,9 @@ export class ProjectionView extends ItemView {
 	private pendingShow = false;
 	private finishEditing: ((commit: boolean) => void) | null = null;
 	private editBtn!: HTMLButtonElement;
+	private imageObserver: MutationObserver | null = null;
+	/** Scroll position of embedded notes, kept across slide rebuilds. */
+	private scrollPositions = new WeakMap<Element, number>();
 	private suggest: SlideSuggest | null = null;
 	private zoomEl!: HTMLElement;
 	private zoomTimer: number | null = null;
@@ -216,6 +219,9 @@ export class ProjectionView extends ItemView {
 		this.registerDomEvent(this.rootEl, "click", (evt) => {
 			if (this.editing || this.isEditorTarget(evt.target)) return;
 			if (this.handleLinkClick(evt)) return;
+			// Clicking in an embedded note (to scroll it) does not change slides.
+			const target = evt.target as HTMLElement | null;
+			if (target && typeof target.closest === "function" && target.closest(".markdown-embed")) return;
 			const r = this.rootEl.getBoundingClientRect();
 			const back = evt.clientX < r.left + r.width / 3;
 			this.plugin.manualNavigate(this, () => (back ? this.prev() : this.next()));
@@ -225,6 +231,18 @@ export class ProjectionView extends ItemView {
 		// projection window: observers are (re)attached to the window the view is really in,
 		// and the size is also checked twice a second as a safety net.
 		this.register(() => this.detachFromWindow());
+		this.register(() => this.imageObserver?.disconnect());
+		this.registerDomEvent(
+			this.slideEl,
+			"scroll",
+			(evt) => {
+				const el = evt.target as Element | null;
+				if (el && el.isConnected && typeof el.closest === "function" && el.closest(".onstage-slide") === this.slideEl) {
+					this.scrollPositions.set(el, el.scrollTop);
+				}
+			},
+			{ capture: true }
+		);
 		this.registerInterval(window.setInterval(() => this.fitCanvas(), 500));
 		this.fitCanvas();
 		this.rootEl.win.requestAnimationFrame(() => this.fitCanvas());
@@ -815,15 +833,26 @@ export class ProjectionView extends ItemView {
 	}
 
 	/**
-	 * Obsidian's ![[image.png|400]] gives a width in pixels of the note. A note is about 700px
-	 * wide, so the width is kept as the same share of the slide width.
+	 * Obsidian's ![[image.png|400]] gives a width in pixels of the note, on the image or on the
+	 * embed around it. A note is about 700px wide, so the width is kept as the same share of
+	 * the slide width.
 	 */
 	private applyImageWidths(root: HTMLElement): void {
-		root.querySelectorAll("img[width]").forEach((img) => {
-			const w = parseFloat(img.getAttribute("width") ?? "");
+		root.querySelectorAll("[width]").forEach((el) => {
+			const w = parseFloat(el.getAttribute("width") ?? "");
 			if (!Number.isFinite(w) || w <= 0) return;
-			(img as HTMLElement).setCssProps({ "--onstage-img-w": `${Math.min(100, (w / 700) * 100)}%` });
+			const value = `${Math.min(100, (w / 700) * 100)}%`;
+			const imgs = el.tagName === "IMG" ? [el] : Array.from(el.querySelectorAll("img"));
+			for (const img of imgs) (img as HTMLElement).setCssProps({ "--onstage-img-w": value });
 		});
+	}
+
+	/** Embeds can get their width or their image after rendering: apply widths again then. */
+	private watchImages(flow: HTMLElement): void {
+		this.imageObserver?.disconnect();
+		const win = flow.win as Window & typeof globalThis;
+		this.imageObserver = new win.MutationObserver(() => this.applyImageWidths(flow));
+		this.imageObserver.observe(flow, { subtree: true, childList: true, attributes: true, attributeFilter: ["width"] });
 	}
 
 	private fits(container: HTMLElement, body: HTMLElement, scale: number, slack: number): boolean {
@@ -914,6 +943,12 @@ export class ProjectionView extends ItemView {
 
 		this.resizeObserver?.disconnect();
 		const body = this.build(this.slideEl, this.current, this.page, layout.pages[this.page]);
+		// Rebuilding moves the rendered fragments, which resets scrolling inside them
+		// (an embedded note scrolled by the presenter): put it back where it was.
+		this.slideEl.querySelectorAll(".markdown-embed-content").forEach((el) => {
+			const top = this.scrollPositions.get(el);
+			if (top) el.scrollTop = top;
+		});
 		this.slideEl.style.setProperty("--onstage-scale", String(layout.scales[this.page]));
 
 		const key = `${m.key}#${this.page}`;
@@ -925,9 +960,33 @@ export class ProjectionView extends ItemView {
 		this.shownKey = key;
 
 		const flow = body.firstElementChild as HTMLElement | null;
+		if (flow) this.watchImages(flow);
 		this.flowHeight = flow ? flow.scrollHeight : 0;
 		if (flow) this.resizeObserver?.observe(flow);
 		this.plugin.onSlideShown(this, this.current, this.models.length);
+		if (this.plugin.devMode) this.scheduleDiagnostics();
+	}
+
+	private diagTimer: number | null = null;
+
+	/** Development installs: describe the shown slide (HTML and sizes of images and embeds). */
+	private scheduleDiagnostics(): void {
+		if (this.diagTimer !== null) window.clearTimeout(this.diagTimer);
+		this.diagTimer = window.setTimeout(() => {
+			this.diagTimer = null;
+			const win = this.rootEl.win;
+			const lines: string[] = [];
+			this.slideEl.querySelectorAll("img, .internal-embed, .markdown-embed, .markdown-embed-content, .markdown-preview-view, .onstage-block").forEach((el) => {
+				const cs = win.getComputedStyle(el);
+				const r = el.getBoundingClientRect();
+				lines.push(
+					`${el.tagName.toLowerCase()}.${(el.getAttribute("class") ?? "").replace(/ /g, ".")} width-attr=${el.getAttribute("width")} ` +
+						`box=${Math.round(r.width)}x${Math.round(r.height)} display=${cs.display} width=${cs.width} max-height=${cs.maxHeight} ` +
+						`overflow-y=${cs.overflowY} height=${cs.height} scrollH=${el.scrollHeight} clientH=${el.clientHeight} var=${cs.getPropertyValue("--onstage-img-w")}`
+				);
+			});
+			this.plugin.writeDiagnostics(this.current + 1, `<!-- ${new Date().toISOString()} slide ${this.current + 1} -->\n<!--\n${lines.join("\n")}\n-->\n${this.slideEl.outerHTML}`);
+		}, 1500);
 	}
 
 	/** Content changed size on its own (image loaded, diagram rendered...): lay out again. */
