@@ -292,12 +292,28 @@ export class ProjectionView extends ItemView {
 		this.resizeObserver = new win.ResizeObserver(() => this.onContentResize());
 		win.addEventListener("resize", fit);
 		win.document.addEventListener("fullscreenchange", fit);
+		const onWinFocus = () => {
+			const active = win.document.activeElement;
+			if (!active || active === win.document.body) this.rootEl.focus({ preventScroll: true });
+		};
+		win.addEventListener("focus", onWinFocus);
+		// Keys pressed while nothing in particular has the focus in this window (just opened,
+		// fullscreen...) still drive the slides.
+		const onDocKey = (evt: KeyboardEvent) => {
+			const t = evt.target as Node | null;
+			if (t && this.rootEl.contains(t)) return; // handled by the slide itself
+			const doc = win.document;
+			if (t === doc.body || t === doc.documentElement || (t && this.containerEl.contains(t))) this.onKey(evt);
+		};
+		win.document.addEventListener("keydown", onDocKey);
 		this.unbindWin = () => {
 			stage.disconnect();
 			this.resizeObserver?.disconnect();
 			this.resizeObserver = null;
 			win.removeEventListener("resize", fit);
 			win.document.removeEventListener("fullscreenchange", fit);
+			win.document.removeEventListener("keydown", onDocKey);
+			win.removeEventListener("focus", onWinFocus);
 		};
 		if (this.models.length) this.show(false);
 	}
@@ -547,6 +563,9 @@ export class ProjectionView extends ItemView {
 		}
 		if (evt.ctrlKey || evt.metaKey || evt.altKey) return;
 		if (this.editing || this.isEditorTarget(evt.target)) return;
+		// The same key event can reach both the slide and the window listener.
+		if (this.handledKeys.has(evt)) return;
+		this.handledKeys.add(evt);
 		let handled = true;
 		switch (evt.key) {
 			case "ArrowRight":
@@ -629,6 +648,12 @@ export class ProjectionView extends ItemView {
 		const href = a.getAttr("href");
 		if (href && /^(https?|mailto|obsidian|zotero):/i.test(href)) this.containerEl.win.open(href, "_blank");
 		return true;
+	}
+
+	/** Bring the projection window to the front with the keyboard on the slide. */
+	focusStage(): void {
+		this.containerEl.win.focus();
+		this.rootEl?.focus({ preventScroll: true });
 	}
 
 	private updateEditButton(): void {
@@ -791,6 +816,7 @@ export class ProjectionView extends ItemView {
 			inner.createDiv({ cls: "onstage-rule" });
 			const h = inner.createEl("h1", { cls: "onstage-title" });
 			if (m.title) h.appendChild(m.title.el);
+			if (page > 0) h.createSpan({ cls: "onstage-continued", text: t("continued") });
 			if (this.meta.length) {
 				const metaEl = inner.createDiv({ cls: "onstage-meta" });
 				this.meta.forEach((line) => metaEl.createDiv({ text: line }));

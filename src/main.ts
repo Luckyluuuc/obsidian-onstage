@@ -207,6 +207,8 @@ export default class OnStagePlugin extends Plugin {
 		if (version < 4 && saved.coverFields === "subtitle, sous-titre, author, auteur, date") {
 			this.settings.coverFields = DEFAULT_SETTINGS.coverFields;
 		}
+		// v5: headings "up to" the level make slides; H2 (# and ##) is the natural default.
+		if (version < 5 && this.settings.splitLevel === 1) this.settings.splitLevel = 2;
 		this.settings.settingsVersion = DEFAULT_SETTINGS.settingsVersion;
 		const legacy = this.settings as Partial<OnStageSettings> & { actions?: unknown; privateCallout?: unknown };
 		delete legacy.actions;
@@ -307,7 +309,7 @@ export default class OnStagePlugin extends Plugin {
 			this.currentView = existing;
 			this.pushNow(sess, true);
 			await ws.revealLeaf(existing.leaf);
-			existing.containerEl.win.focus();
+			existing.focusStage();
 			return;
 		}
 
@@ -329,7 +331,7 @@ export default class OnStagePlugin extends Plugin {
 
 		if (!other) {
 			await ws.revealLeaf(leaf);
-			window.setTimeout(() => view.containerEl.win.focus(), 250);
+			window.setTimeout(() => view.focusStage(), 250);
 			return;
 		}
 		// Give the keyboard back to the note so you can keep typing.

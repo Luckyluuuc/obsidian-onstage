@@ -33,4 +33,15 @@ const view = {};
 p.sessions = new Map([[view, { overrides: o }]]);
 assert.equal(p.settingsFor(view).theme, "dark");
 assert.equal(p.settingsFor(view).follow, true);
-console.log("OK");
+// Settings from before v5 with H1 move to H2 (headings up to the level make slides).
+void (async () => {
+	const q = new (OnStagePlugin as any)();
+	q.loadData = async () => ({ settingsVersion: 4, splitLevel: 1 });
+	await q.loadSettings();
+	assert.equal(q.settings.splitLevel, 2);
+	const r = new (OnStagePlugin as any)();
+	r.loadData = async () => ({ settingsVersion: 5, splitLevel: 1 });
+	await r.loadSettings();
+	assert.equal(r.settings.splitLevel, 1, "a choice made after v5 is kept");
+	console.log("OK");
+})();

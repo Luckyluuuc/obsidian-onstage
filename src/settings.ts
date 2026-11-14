@@ -29,7 +29,7 @@ export interface OnStageSettings {
 }
 
 export const DEFAULT_SETTINGS: OnStageSettings = {
-	settingsVersion: 4,
+	settingsVersion: 5,
 	splitLevel: 2,
 	cover: true,
 	agenda: true,
